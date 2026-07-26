@@ -1,0 +1,317 @@
+/* ==========================================================================
+   enhance.css — Glassmorphism + vibrancy + mascot + games + live data
+   Loaded AFTER styles.css so it can layer on / override the base theme.
+   --------------------------------------------------------------------------
+   GLASSMORPHISM 101 (used throughout this file):
+     background: semi-transparent fill        → lets color bleed through
+     backdrop-filter: blur() saturate()       → frosts whatever is behind it
+     border: 1px solid rgba(255,255,255,.6)   → the bright "glass edge"
+     box-shadow + subtle inner highlight      → sense of a floating pane
+   The trick only reads as glass when there's something colorful behind it,
+   so we paint a soft animated "aurora" on the page background first.
+   ========================================================================== */
+
+/* ----- extra vibrant tokens layered onto the base palette ----- */
+:root {
+  --c-indigo: #4F46E5;
+  --c-violet: #7C3AED;
+  --c-fuchsia:#C026D3;
+  --c-cyan:   #06B6D4;
+  --c-sky:    #0EA5E9;
+  --c-rose:   #F43F5E;
+  --c-amber:  #F59E0B;
+  --glass-bg:        rgba(255,255,255,.55);
+  --glass-bg-strong: rgba(255,255,255,.72);
+  --glass-brd:       rgba(255,255,255,.65);
+  --glass-blur: blur(18px) saturate(185%);
+  --glow: 0 0 0 1px rgba(255,255,255,.4), 0 18px 50px -12px rgba(79,70,229,.45);
+}
+
+/* ====================== 1. Vibrant aurora backdrop ====================== */
+/* Fixed, GPU-cheap colored blobs that drift slowly behind the glass UI. */
+.aurora { position: fixed; inset: 0; z-index: -2; overflow: hidden; pointer-events: none; }
+.aurora::before, .aurora::after,
+.aurora .blob { content: ""; position: absolute; border-radius: 50%; filter: blur(70px); opacity: .55; }
+.aurora::before { width: 46vw; height: 46vw; left: -8vw; top: -10vw; background: radial-gradient(circle at 30% 30%, var(--c-indigo), transparent 70%); animation: drift1 24s var(--ease) infinite alternate; }
+.aurora::after  { width: 40vw; height: 40vw; right: -6vw; top: 20vh; background: radial-gradient(circle at 60% 40%, var(--c-fuchsia), transparent 70%); animation: drift2 28s var(--ease) infinite alternate; }
+.aurora .blob   { width: 38vw; height: 38vw; left: 30vw; bottom: -14vw; background: radial-gradient(circle at 50% 50%, var(--c-cyan), transparent 70%); opacity: .4; animation: drift3 32s var(--ease) infinite alternate; }
+@keyframes drift1 { to { transform: translate(8vw, 10vh) scale(1.15); } }
+@keyframes drift2 { to { transform: translate(-6vw, 8vh) scale(1.1); } }
+@keyframes drift3 { to { transform: translate(-10vw, -8vh) scale(1.2); } }
+/* lighten the base page so the aurora reads through everything */
+body { background: #EEF2FB; }
+@media (prefers-reduced-motion: reduce) {
+  .aurora::before, .aurora::after, .aurora .blob { animation: none; }
+}
+
+/* ====================== 2. Glass-ify existing UI ======================== */
+/* Navbar: frosted glass once scrolled. */
+.nav.is-scrolled {
+  background: var(--glass-bg-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-bottom-color: var(--glass-brd);
+  box-shadow: 0 8px 30px -10px rgba(79,70,229,.25);
+}
+
+/* Cards become frosted panes with a bright top edge + lift/glow on hover. */
+.xcard, .proj, .stat-card, .chart-box, .demo-panel {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-color: var(--glass-brd);
+  position: relative;
+}
+.xcard::before, .proj::before, .stat-card::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,.5), transparent 40%);
+  opacity: .7;
+}
+.xcard:hover, .proj:hover, .stat-card:hover {
+  box-shadow: var(--glow);
+  border-color: rgba(255,255,255,.85);
+}
+/* Ghost buttons + nav pills → glass */
+.btn--ghost { background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border-color: var(--glass-brd); }
+.btn--ghost:hover { background: rgba(255,255,255,.8); box-shadow: var(--glow); }
+
+/* Primary button: vibrant gradient + animated sheen + glow */
+.btn:not(.btn--ghost) {
+  background: linear-gradient(120deg, var(--c-indigo), var(--c-violet) 55%, var(--c-fuchsia));
+  background-size: 180% 180%; box-shadow: 0 10px 30px -6px rgba(124,58,237,.5);
+  position: relative; overflow: hidden;
+}
+.btn:not(.btn--ghost):hover { background-position: 100% 0; transform: translateY(-2px) scale(1.02); box-shadow: 0 16px 40px -8px rgba(124,58,237,.6); }
+.btn:not(.btn--ghost)::after { /* moving sheen */
+  content: ""; position: absolute; top: 0; left: -120%; width: 60%; height: 100%;
+  background: linear-gradient(110deg, transparent, rgba(255,255,255,.45), transparent);
+  transform: skewX(-20deg); transition: left .6s var(--ease);
+}
+.btn:not(.btn--ghost):hover::after { left: 130%; }
+@media (prefers-reduced-motion: reduce){ .btn:not(.btn--ghost)::after { display: none; } }
+
+/* Modal dialog: glass */
+.modal__dialog { background: var(--glass-bg-strong); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); }
+.modal__head, .modal__tabs { background: rgba(255,255,255,.5); }
+
+/* vibrant gradient text helper variant */
+.grad { background: linear-gradient(110deg, var(--c-indigo), var(--c-fuchsia) 50%, var(--c-cyan)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* "Current role" pill on timeline */
+.tl-item .now-badge {
+  display: inline-flex; align-items: center; gap: 6px; margin-left: 8px; vertical-align: middle;
+  font-family: var(--font-mono); font-size: .64rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: #fff; background: linear-gradient(120deg, var(--emerald), #10B981); padding: 3px 9px; border-radius: var(--r-pill);
+  box-shadow: 0 4px 12px rgba(5,150,105,.4);
+}
+.tl-item .now-badge .ping { width: 7px; height: 7px; border-radius: 50%; background: #fff; animation: pulse 2s infinite; }
+.tl-item.is-current::before { border-color: var(--emerald); box-shadow: 0 0 0 4px rgba(5,150,105,.18); }
+
+/* ========================= 3. Mascot guide bot ========================== */
+.mascot {
+  position: fixed; right: 22px; bottom: 22px; z-index: 95;
+  width: 84px; height: 84px; border: 0; background: none; cursor: pointer; padding: 0;
+  filter: drop-shadow(0 12px 18px rgba(79,70,229,.35));
+  transition: transform .4s var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+.mascot:hover { transform: translateY(-6px) scale(1.06); }
+.mascot:active { transform: scale(.94); }
+.mascot.is-happy { animation: bot-bounce .7s var(--ease); }
+.mascot.is-wave  .arm-r { animation: bot-wave .6s ease-in-out 2; transform-origin: 70% 30%; }
+@keyframes bot-bounce { 0%,100%{ transform: translateY(0) } 30%{ transform: translateY(-22px) scale(1.08) } 55%{ transform: translateY(0) scale(.96,1.04) } 75%{ transform: translateY(-8px) } }
+@keyframes bot-wave { 0%,100%{ transform: rotate(0) } 50%{ transform: rotate(-22deg) } }
+
+/* idle float + breathing handled on the SVG body group */
+.mascot .body-grp { animation: bot-float 4.5s ease-in-out infinite, bot-breathe 3.2s ease-in-out infinite; transform-origin: 50% 60%; }
+@keyframes bot-float   { 0%,100%{ transform: translateY(0) } 50%{ transform: translateY(-4px) } }
+@keyframes bot-breathe { 0%,100%{ transform: scale(1) } 50%{ transform: scale(1.035) } }
+/* blinking: eyelids scale down quickly on a long loop */
+.mascot .eye-lid { transform-origin: center; animation: bot-blink 5s infinite; }
+@keyframes bot-blink { 0%,94%,100%{ transform: scaleY(0) } 96%,98%{ transform: scaleY(1) } }
+.mascot .ring { transform-origin: 50% 50%; animation: bot-spin 14s linear infinite; opacity: .6; }
+@keyframes bot-spin { to { transform: rotate(360deg) } }
+@media (prefers-reduced-motion: reduce){
+  .mascot .body-grp, .mascot .eye-lid, .mascot .ring, .mascot.is-happy, .mascot.is-wave .arm-r { animation: none; }
+}
+
+/* speech bubble */
+.mascot-bubble {
+  position: fixed; right: 116px; bottom: 40px; z-index: 96; max-width: 280px;
+  background: var(--glass-bg-strong); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-brd); border-radius: 18px 18px 4px 18px; padding: 14px 16px;
+  box-shadow: 0 18px 50px -12px rgba(79,70,229,.5);
+  opacity: 0; transform: translateY(10px) scale(.96); transform-origin: bottom right; pointer-events: none;
+  transition: opacity .3s var(--ease), transform .3s var(--ease);
+}
+.mascot-bubble.show { opacity: 1; transform: none; pointer-events: auto; }
+.mascot-bubble h5 { font-family: var(--font-head); font-size: .92rem; color: var(--text); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+.mascot-bubble p { font-size: .86rem; color: var(--text-soft); margin: 0; }
+.mascot-bubble .b-actions { display: flex; gap: 8px; margin-top: 10px; }
+.mascot-bubble .b-actions button { font: 600 .78rem var(--font-head); border: 0; cursor: pointer; border-radius: var(--r-pill); padding: 6px 12px; }
+.mascot-bubble .b-go { background: var(--c-indigo); color: #fff; }
+.mascot-bubble .b-next { background: rgba(15,23,42,.08); color: var(--text); }
+.mascot-bubble::after { content: ""; position: absolute; right: -7px; bottom: 10px; width: 16px; height: 16px; background: inherit; border-right: 1px solid var(--glass-brd); border-bottom: 1px solid var(--glass-brd); transform: rotate(-45deg); }
+@media (max-width: 560px){ .mascot { width: 64px; height: 64px; right: 14px; bottom: 14px; } .mascot-bubble { right: 14px; bottom: 88px; max-width: calc(100vw - 28px); } }
+
+/* ============================ 4. Section shell ========================== */
+.eyebrow.alt { color: var(--c-fuchsia); background: rgba(192,38,211,.08); border-color: rgba(192,38,211,.2); }
+.eyebrow.alt::before { background: var(--c-fuchsia); }
+
+/* ============================== 5. Games =============================== */
+.games__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap: var(--sp-5); }
+.gcard {
+  position: relative; border-radius: var(--r-lg); padding: var(--sp-6); overflow: hidden; cursor: pointer;
+  color: #fff; border: 1px solid rgba(255,255,255,.25); box-shadow: var(--sh-2);
+  transition: transform .3s var(--ease), box-shadow .3s var(--ease);
+}
+.gcard:hover { transform: translateY(-6px) scale(1.015); box-shadow: var(--glow); }
+.gcard.g1 { background: linear-gradient(135deg, var(--c-indigo), var(--c-sky)); }
+.gcard.g2 { background: linear-gradient(135deg, var(--c-violet), var(--c-fuchsia)); }
+.gcard.g3 { background: linear-gradient(135deg, var(--c-amber), var(--c-rose)); }
+.gcard .g-emoji { font-size: 2.2rem; }  /* decorative only (aria-hidden) */
+.gcard h3 { color: #fff; margin: 12px 0 6px; }
+.gcard p { color: rgba(255,255,255,.9); font-size: .9rem; }
+.gcard .g-best { margin-top: 16px; font-family: var(--font-mono); font-size: .78rem; background: rgba(255,255,255,.18); display: inline-flex; gap: 6px; padding: 5px 12px; border-radius: var(--r-pill); }
+.gcard .g-play { position: absolute; top: 16px; right: 16px; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,.2); display: grid; place-items: center; transition: background .2s, transform .3s; }
+.gcard:hover .g-play { background: rgba(255,255,255,.34); transform: scale(1.1) rotate(8deg); }
+
+/* Game overlay (separate from the demo modal) */
+.game-overlay { position: fixed; inset: 0; z-index: 250; display: none; }
+.game-overlay.is-open { display: block; }
+.game-overlay__scrim { position: absolute; inset: 0; background: rgba(15,23,42,.55); backdrop-filter: blur(6px); }
+.game-stage {
+  position: absolute; inset: 0; margin: auto; width: min(560px, 94vw); height: min(640px, 92vh);
+  background: var(--glass-bg-strong); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-brd); border-radius: var(--r-lg); box-shadow: var(--sh-4);
+  display: flex; flex-direction: column; overflow: hidden;
+  transform: translateY(16px) scale(.98); opacity: 0; transition: transform .3s var(--ease), opacity .3s var(--ease);
+}
+.game-overlay.is-open .game-stage { transform: none; opacity: 1; }
+.game-head { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--glass-brd); }
+.game-head h3 { font-size: 1.1rem; }
+.game-head .score { margin-left: auto; font-family: var(--font-mono); font-weight: 600; color: var(--c-indigo); }
+.game-close { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--glass-brd); background: rgba(255,255,255,.5); cursor: pointer; display: grid; place-items: center; transition: transform .2s, background .2s; }
+.game-close:hover { transform: rotate(90deg); background: #fff; }
+.game-body { flex: 1; position: relative; overflow: hidden; }
+.game-arena { position: absolute; inset: 0; }
+
+/* reaction game targets */
+.rx-target { position: absolute; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, var(--c-indigo)); box-shadow: 0 6px 18px rgba(79,70,229,.5); cursor: pointer; animation: popIn .2s var(--ease); display:grid; place-items:center; color:#fff; }
+.rx-target.bad { background: radial-gradient(circle at 35% 30%, #fff, var(--c-rose)); box-shadow: 0 6px 18px rgba(244,63,94,.5); }
+
+/* memory game */
+.mem-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 18px; height: 100%; align-content: center; }
+.mem-card { aspect-ratio: 1; border-radius: 12px; position: relative; transform-style: preserve-3d; transition: transform .4s var(--ease); cursor: pointer; }
+.mem-card.flip { transform: rotateY(180deg); }
+.mem-face { position: absolute; inset: 0; border-radius: 12px; display: grid; place-items: center; backface-visibility: hidden; font-size: 1.8rem; }
+.mem-front { background: linear-gradient(135deg, var(--c-violet), var(--c-fuchsia)); color: #fff; }
+.mem-front::after { content: "?"; font-family: var(--font-head); font-weight: 700; font-size: 1.6rem; }
+.mem-back { background: #fff; border: 2px solid var(--glass-brd); transform: rotateY(180deg); }
+.mem-card.matched .mem-back { background: var(--emerald-050); border-color: var(--emerald); }
+
+/* quick-math */
+.qm-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 20px; padding: 20px; text-align: center; }
+.qm-q { font-family: var(--font-head); font-weight: 700; font-size: 2.6rem; color: var(--text); }
+.qm-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 320px; }
+.qm-opt { font: 700 1.3rem var(--font-head); padding: 16px; border-radius: var(--r-md); border: 1px solid var(--glass-brd); background: rgba(255,255,255,.6); cursor: pointer; transition: transform .15s, background .2s; }
+.qm-opt:hover { transform: translateY(-2px); background: #fff; }
+.qm-opt.right { background: var(--emerald); color: #fff; border-color: var(--emerald); }
+.qm-opt.wrong { background: var(--c-rose); color: #fff; border-color: var(--c-rose); }
+.qm-timebar { height: 8px; width: 100%; max-width: 320px; background: rgba(15,23,42,.1); border-radius: var(--r-pill); overflow: hidden; }
+.qm-timebar i { display: block; height: 100%; background: linear-gradient(90deg, var(--c-indigo), var(--c-fuchsia)); width: 100%; transition: width 1s linear; }
+
+/* game start / end screens + leaderboard + badges */
+.game-screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; text-align: center; background: rgba(255,255,255,.4); backdrop-filter: blur(4px); }
+.game-screen h2 { font-size: 1.8rem; }
+.game-screen .big-score { font-family: var(--font-head); font-size: 3rem; font-weight: 700; background: linear-gradient(120deg,var(--c-indigo),var(--c-fuchsia)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: var(--r-pill); font-family: var(--font-head); font-weight: 700; color: #fff; animation: bot-bounce .7s var(--ease); }
+.badge.bronze { background: linear-gradient(120deg,#B45309,#D97706); }
+.badge.silver { background: linear-gradient(120deg,#64748B,#94A3B8); }
+.badge.gold   { background: linear-gradient(120deg,#CA8A04,#FACC15); color:#3b2f00; }
+.lb { width: 100%; max-width: 320px; text-align: left; }
+.lb h4 { font-family: var(--font-head); font-size: .85rem; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: 8px; }
+.lb-row { display: flex; align-items: center; gap: 10px; padding: 7px 12px; border-radius: var(--r-sm); font-size: .9rem; }
+.lb-row:nth-child(even){ background: rgba(255,255,255,.5); }
+.lb-row .rank { font-family: var(--font-mono); font-weight: 700; color: var(--c-indigo); width: 22px; }
+.lb-row .who { font-family: var(--font-mono); font-weight: 600; }
+.lb-row .pts { margin-left: auto; font-family: var(--font-mono); font-weight: 700; }
+.lb-row.you { box-shadow: inset 0 0 0 2px var(--c-indigo); background: var(--accent-050); }
+.initials-in { display: flex; gap: 8px; justify-content: center; align-items: center; }
+.initials-in input { width: 90px; text-align: center; text-transform: uppercase; font-family: var(--font-mono); font-weight: 700; letter-spacing: .2em; }
+.confetti { position: absolute; width: 10px; height: 14px; top: -20px; will-change: transform; }
+@media (prefers-reduced-motion: reduce){ .badge { animation: none; } .confetti { display: none; } }
+
+/* ============================ 6. Live data ============================= */
+.live__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap: var(--sp-5); }
+.lcard {
+  background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-brd); border-radius: var(--r-lg); padding: var(--sp-5); box-shadow: var(--sh-1);
+  display: flex; flex-direction: column; min-height: 260px; transition: box-shadow .3s var(--ease), transform .3s var(--ease);
+}
+.lcard:hover { box-shadow: var(--glow); transform: translateY(-4px); }
+.lcard__head { display: flex; align-items: center; gap: 10px; margin-bottom: var(--sp-4); }
+.lcard__head .ic-wrap { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; color: #fff; flex: none; }
+.lcard__head h3 { font-size: 1.05rem; }
+.lcard__head .live-dot { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: .72rem; font-family: var(--font-mono); color: var(--emerald); }
+.lcard__head .live-dot i { width: 7px; height: 7px; border-radius: 50%; background: var(--emerald); animation: pulse 1.8s infinite; }
+.lcard__body { flex: 1; }
+.lcard__foot { margin-top: var(--sp-4); padding-top: var(--sp-3); border-top: 1px dashed var(--slate-200); font-size: .76rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; }
+.lcard__foot button { font: 600 .76rem var(--font-head); border: 0; background: none; color: var(--accent); cursor: pointer; }
+
+/* loading skeletons (shimmer) */
+.skel { background: linear-gradient(100deg, rgba(148,163,184,.18) 30%, rgba(148,163,184,.35) 50%, rgba(148,163,184,.18) 70%); background-size: 200% 100%; border-radius: 8px; animation: shimmer 1.3s linear infinite; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+.skel-line { height: 12px; margin-bottom: 10px; }
+.skel-line.w60 { width: 60%; } .skel-line.w80 { width: 80%; } .skel-line.w40 { width: 40%; }
+.skel-block { height: 60px; margin-bottom: 12px; }
+@media (prefers-reduced-motion: reduce){ .skel { animation: none; } .lcard__head .live-dot i { animation: none; } }
+
+/* error state */
+.lerror { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 10px; height: 100%; color: var(--text-muted); padding: 20px; }
+.lerror .ic { width: 32px; height: 32px; color: var(--amber); }
+.lerror button { margin-top: 4px; }
+
+/* weather */
+.wx-now { display: flex; align-items: center; gap: 16px; }
+.wx-temp { font-family: var(--font-head); font-weight: 700; font-size: 2.8rem; color: var(--text); line-height: 1; }
+.wx-ico { font-size: 2.6rem; }
+.wx-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+.wx-meta div { background: rgba(255,255,255,.5); border-radius: 10px; padding: 8px 10px; font-size: .82rem; }
+.wx-meta b { font-family: var(--font-head); display: block; color: var(--text); }
+
+/* repo / list rows */
+.lrow { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid rgba(148,163,184,.18); }
+.lrow:last-child { border-bottom: 0; }
+.lrow .lr-main { min-width: 0; flex: 1; }
+.lrow .lr-title { font-weight: 600; font-size: .9rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lrow .lr-sub { font-size: .76rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lrow .lr-stat { font-family: var(--font-mono); font-weight: 700; font-size: .82rem; color: var(--c-amber); flex: none; display: flex; align-items: center; gap: 4px; }
+.lr-up { color: var(--emerald); } .lr-down { color: var(--danger); }
+.lang-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+
+.live-filter { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.live-filter button { font: 600 .76rem var(--font-head); border: 1px solid var(--glass-brd); background: rgba(255,255,255,.5); border-radius: var(--r-pill); padding: 5px 12px; cursor: pointer; transition: all .2s; }
+.live-filter button.on { background: var(--c-indigo); color: #fff; border-color: var(--c-indigo); }
+
+/* AI chat */
+.chat { display: flex; flex-direction: column; height: 360px; }
+.chat__log { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
+.msg { max-width: 82%; padding: 10px 14px; border-radius: 16px; font-size: .9rem; line-height: 1.5; animation: fadeIn .3s var(--ease); }
+.msg.bot { align-self: flex-start; background: rgba(255,255,255,.7); border: 1px solid var(--glass-brd); border-bottom-left-radius: 4px; color: var(--text); }
+.msg.user { align-self: flex-end; background: linear-gradient(120deg,var(--c-indigo),var(--c-violet)); color: #fff; border-bottom-right-radius: 4px; }
+.msg.typing { display: inline-flex; gap: 4px; }
+.msg.typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--slate-400); animation: typing 1s infinite; }
+.msg.typing i:nth-child(2){ animation-delay: .15s } .msg.typing i:nth-child(3){ animation-delay: .3s }
+@keyframes typing { 0%,60%,100%{ transform: translateY(0); opacity:.4 } 30%{ transform: translateY(-5px); opacity:1 } }
+.chat__sugg { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0; }
+.chat__sugg button { font: 500 .78rem var(--font-body); border: 1px solid var(--glass-brd); background: rgba(255,255,255,.5); border-radius: var(--r-pill); padding: 6px 12px; cursor: pointer; transition: all .2s; }
+.chat__sugg button:hover { background: var(--c-indigo); color: #fff; border-color: var(--c-indigo); }
+.chat__in { display: flex; gap: 8px; margin-top: 10px; }
+.chat__in input { flex: 1; }
+.chat__in button { flex: none; width: 48px; padding: 0; display: grid; place-items: center; }
+
+/* generic fade-up used by JS for staggered injection */
+.stagger-in { opacity: 0; transform: translateY(14px); animation: staggerIn .5s var(--ease) forwards; }
+@keyframes staggerIn { to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce){ .stagger-in { animation: none; opacity: 1; transform: none; } }
